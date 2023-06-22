@@ -14,52 +14,55 @@ import mysql.connector
 app = Flask(__name__, static_url_path='')
 
 #connect to database
-conn = mysql.connector.connect(user='root', password='',
-                                  host='127.0.0.1',
-                                  database='states',
-                               buffered = True)
+conn = mysql.connector.connect(
+    user='root',
+    password='',
+    host='127.0.0.1',
+    database='zipcodes',
+    buffered = True
+)
 cursor = conn.cursor()
 
 #Search state database
-@app.route('/searchSTATE/<searchState>')
-def searchstate(searchState):
+@app.route('/search/<searchZip>')
+def searchZip(searchZip):
     # Get data from database
-    cursor.execute("SELECT * FROM `states` WHERE State=%s", [searchState])
+    cursor.execute("SELECT * FROM `zip_code_database` WHERE zip=%s", [searchZip])
     test = cursor.rowcount
     if test != 1:
-        return searchState + " was not found"
+        return searchZip + " was not found"
     else:
         searched = cursor.fetchall()
         return 'Success! Here you go: %s' % searched
 
 #update state database population for a specified state
-@app.route('/updatestatepop/<updateSTATE> <updatePOP>')
-def updatestatepop(updateSTATE, updatePOP):
-    cursor.execute("SELECT * FROM `states` WHERE State=%s", [updateSTATE])
+@app.route('/update/<updateZip> <updatePOP>')
+def updatePop(updateZip, updatePOP):
+    cursor.execute("SELECT * FROM `zip_code_database` WHERE zip=%s", [updateZip])
     test = cursor.rowcount
     if test != 1:
-        return updateSTATE + " was not found"
+        return updateZip + " was not found"
     else:
-        cursor.execute("UPDATE `states` SET Pop = %s WHERE State= %s;", [updatePOP,updateSTATE])
-        cursor.execute("SELECT * FROM `states` WHERE State=%s and Pop=%s", [updateSTATE,updatePOP])
+        cursor.execute("UPDATE `zip_code_database` SET Population = %s WHERE zip= %s;", [updatePOP,updateZip])
+        cursor.execute("SELECT * FROM `zip_code_database` WHERE zip=%s and Population=%s", [updateZip,updatePOP])
         test1 = cursor.rowcount
         if test1 != 1:
-            return updateSTATE + "  failed to update"
+            return updateZip + "  failed to update"
         else:
-            return 'Population has been updated successfully for State: %s' % updateSTATE
+            return 'Population has been updated successfully for Zip: %s' % updateZip
 
 #update webpage
 @app.route('/update',methods = ['POST'])
 def update():
-       user = request.form['ustate']
-       user2 = request.form['upop']
-       return redirect(url_for('updatestatepop', updateSTATE=user, updatePOP=user2))
+       user = request.form['zipcode']
+       user2 = request.form['population']
+       return redirect(url_for('updatePop', updateZip=user, updatePOP=user2))
 
 #search page
 @app.route('/search', methods=['GET'])
 def search():
-       user = request.args.get('sstate')
-       return redirect(url_for('searchstate', searchState=user))
+       user = request.args.get('zipcode')
+       return redirect(url_for('searchZip', searchZip=user))
 
 
 #root of web server and gots to template (login.html)
